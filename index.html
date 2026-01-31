@@ -459,7 +459,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
     body.mode-night .header-orb svg { fill: white; filter: drop-shadow(0 0 15px var(--primary)); }
     @keyframes floatOrb { 0%,100%{transform:translate(-50%,0)} 50%{transform:translate(-50%,-8px)} }
     
-    #usernameDisplay { position: fixed; top: 120px; left: 50%; transform: translateX(-50%); z-index: 10; font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; pointer-events: none; text-transform: uppercase; letter-spacing: 2px; }
+    #userNameDisplay { position: fixed; top: 120px; left: 50%; transform: translateX(-50%); z-index: 10; font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; pointer-events: none; text-transform: uppercase; letter-spacing: 2px; }
     #nv-toast { position: fixed; bottom: 200px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 20px; border-radius: 50px; backdrop-filter: blur(10px); opacity: 0; transition: 0.4s; z-index: 9999; font-size: 0.8rem; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     #nv-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     #modeIndicator { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); font-size: 0.65rem; font-weight: bold; opacity: 0.5; z-index: 20; text-transform: uppercase; letter-spacing: 1px; }
@@ -2010,7 +2010,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
   <div id="modeIndicator">CARREGANDO nO.Sºlar...</div>
 
   <div class="header-orb" id="orbToggle" title="Acessar Cockpit do Usuário"><svg><use href="#icon-orb"></use></svg></div>
-  <div id="usernameDisplay"></div>
+  <div id="userNameDisplay"></div>
 
   <div class="top-bar">
     <div class="top-grp"><button class="btn-icon" id="btnSettings" title="Configurações"><svg><use href="#icon-settings"></use></svg></button></div>
@@ -2104,20 +2104,20 @@ const KODUX = {
    ═══════════════════════════════════════════════════════════════ */
 
 function initDIConstants() {
-    const di_userName = localStorage.getItem('di_userName') || 'Viajante';
-    const di_infodoseName = localStorage.getItem('di_infodoseName') || 'KOBLLUX';
+    const di_userName = localStorage.getItem('di_userName') || '';
+    const di_infodoseName = localStorage.getItem('di_infodoseName') || '';
     const di_apiKey = localStorage.getItem('di_apiKey') || '';
     const di_modelName = localStorage.getItem('di_modelName') || 'nvidia/nemotron-3-nano-30b-a3b:free';
     const di_systemRole = localStorage.getItem('di_systemRole') || 'oi Dual';
-    const di_solarMode = localStorage.getItem('di_solarMode') || 'night';
+    const di_solarMode = localStorage.getItem('di_solarMode') || '';
     const di_assistantEnabled = localStorage.getItem('di_assistantEnabled') === '1';
     const di_trainingActive = localStorage.getItem('di_trainingActive') === '1';
     const di_trainingText = localStorage.getItem('di_trainingText') || '';
     
     // Atualizar elementos da UI
-    const usernameDisplay = document.getElementById('usernameDisplay');
-    if (usernameDisplay) {
-        usernameDisplay.textContent = di_userName;
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    if (userNameDisplay) {
+        userNameDisplay.textContent = di_userName;
     }
     
     const modeIndicator = document.getElementById('modeIndicator');
@@ -2500,7 +2500,7 @@ const App = {
     autoByTime() { const h=new Date().getHours(); this.setMode((h>=6&&h<17)?'day':(h>=17&&h<19)?'sunset':'night'); },
     updateUI() { 
         document.getElementById('statusSolarMode').textContent = `${this.state.solarMode.toUpperCase()} ${this.state.isAutoSolar ? '(AUTO)' : '(MAN)'}`; 
-        document.getElementById('usernameDisplay').textContent = document.getElementById('inputUserId').value; 
+        document.getElementById('userNameDisplay').textContent = document.getElementById('inputUserId').value; 
     },
     toggleField(f,s) { this.state.open = f!==undefined?f:!this.state.open; document.getElementById('chat-container').classList.toggle('collapsed', !this.state.open); document.body.classList.toggle('field-closed', !this.state.open); if(!s) this.speakText(getRandomText(FOOTER_TEXTS[this.state.open?'open':'closed']['ritual'])); },
     
@@ -3052,20 +3052,20 @@ const KODUX = {
    ═══════════════════════════════════════════════════════════════ */
 
 function initDIConstants() {
-    const di_userName = localStorage.getItem('di_userName') || 'Viajante';
-    const di_infodoseName = localStorage.getItem('di_infodoseName') || 'KOBLLUX';
+    const di_userName = localStorage.getItem('di_userName') || '';
+    const di_infodoseName = localStorage.getItem('di_infodoseName') || '';
     const di_apiKey = localStorage.getItem('di_apiKey') || '';
     const di_modelName = localStorage.getItem('di_modelName') || 'nvidia/nemotron-3-nano-30b-a3b:free';
     const di_systemRole = localStorage.getItem('di_systemRole') || 'oi Dual';
-    const di_solarMode = localStorage.getItem('di_solarMode') || 'night';
+    const di_solarMode = localStorage.getItem('di_solarMode') || '';
     const di_assistantEnabled = localStorage.getItem('di_assistantEnabled') === '1';
     const di_trainingActive = localStorage.getItem('di_trainingActive') === '1';
     const di_trainingText = localStorage.getItem('di_trainingText') || '';
     
     // Atualizar elementos da UI
-    const usernameDisplay = document.getElementById('usernameDisplay');
-    if (usernameDisplay) {
-        usernameDisplay.textContent = di_userName;
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    if (userNameDisplay) {
+        userNameDisplay.textContent = di_userName;
     }
     
     const modeIndicator = document.getElementById('modeIndicator');
@@ -3448,7 +3448,7 @@ const App = {
     autoByTime() { const h=new Date().getHours(); this.setMode((h>=6&&h<17)?'day':(h>=17&&h<19)?'sunset':'night'); },
     updateUI() { 
         document.getElementById('statusSolarMode').textContent = `${this.state.solarMode.toUpperCase()} ${this.state.isAutoSolar ? '(AUTO)' : '(MAN)'}`; 
-        document.getElementById('usernameDisplay').textContent = document.getElementById('inputUserId').value; 
+        document.getElementById('userNameDisplay').textContent = document.getElementById('inputUserId').value; 
     },
     toggleField(f,s) { this.state.open = f!==undefined?f:!this.state.open; document.getElementById('chat-container').classList.toggle('collapsed', !this.state.open); document.body.classList.toggle('field-closed', !this.state.open); if(!s) this.speakText(getRandomText(FOOTER_TEXTS[this.state.open?'open':'closed']['ritual'])); },
     
