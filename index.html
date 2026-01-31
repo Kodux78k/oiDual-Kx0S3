@@ -66,7 +66,7 @@ html,body{height:100%;margin:0;font-family:var(--font-ui),system-ui,-apple-syste
 /* subtle grid background */
 body{
   min-height:100vh;
-  overflow:auto;
+  overflow:hidden;
   background-image:
     linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
@@ -530,8 +530,8 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
     .tool-btn svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }
 
     /* Input Dock */
-    .input-dock { position: fixed; bottom: 0; left: 0; right: 0; padding: 16px; background: linear-gradient(to top, var(--bg-deep) 30%, transparent); z-index: 30; display: flex; flex-direction: column; align-items: center; }
-    body.mode-day .input-dock { background: linear-gradient(to top, rgba(255,255,255,0.6) 18%, transparent); }
+    .input-dock { position: fixed; bottom: 0; left: 0; right: 0; padding: 16px; background: linear-gradient(to top, var(--bg-deep) 18%, transparent); z-index: 30; display: flex; flex-direction: column; align-items: center; }
+    body.mode-day .input-dock { background: linear-gradient(to top, rgba(0,0,0,0.4) 18%, transparent); }
     #filePreview { display: none; width: 100%; max-width: 400px; background: rgba(0,0,0,0.8); border: 1px solid var(--primary); border-radius: 12px; padding: 10px; margin-bottom: 10px; align-items: center; justify-content: space-between; backdrop-filter: blur(10px); }
     #filePreview.active { display: flex; animation: slideIn 0.3s; }
     .file-info { font-size: 0.8rem; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
@@ -3846,15 +3846,15 @@ if(window.__RENDERBUS__?.on){
 </script>
 <div class="wrap">
   <div class="content">
-    <iframe id="frame" src="./index.html" title="Dual Infodose frame"></iframe>
+    <iframe id="frame" src="about:blank" title="Dual Infodose frame"></iframe>
   </div>
 
   <div class="symbol-bar" aria-hidden="">
     <button class="symbol-button" data-url="about:blank">Φ</button>
     <button class="symbol-button" data-url="https://kodux78k.github.io/oiDual-Vivivi-1/">꩜</button>
-    <button class="symbol-button" data-url="https://kodux78k.github.io/oiDual-KxT/">◌</button>
+    <button class="symbol-button" data-url="https://kodux78k.github.io/oiDual-idHome/">◌</button>
     <button class="symbol-button" data-url="https://kodux78k.github.io/Unouno-/index.html">☼</button>
-    <button class="symbol-button" data-url="https://kodux78k.github.io/NoSolarDual/index.html">◑</button>
+    <button class="symbol-button" data-url="https://kodux78k.github.io/oiDual-tst1/">◑</button>
     <button class="symbol-button" data-url="https://kodux78k.github.io/info-Doc/index.html">◘</button>
   </div>
 
@@ -3877,7 +3877,7 @@ if(window.__RENDERBUS__?.on){
     <div id="pulsos"></div>
   </div>
 
-  <p class="footer">Do seu jeito. <strong>Sempre</strong> único. <strong>Sempre</strong> seu.</p>
+ <!-- <p class="footer">Do seu jeito. <strong>Sempre</strong> único. <strong>Sempre</strong> seu.</p> -->
 </div>
 
 <!-- lightweight web component modal for remote/local pages -->
@@ -4039,6 +4039,7 @@ if(window.__RENDERBUS__?.on){
 
 })();
 </script>
+
 
 <script>
   class MyFrameLoader extends HTMLElement {
