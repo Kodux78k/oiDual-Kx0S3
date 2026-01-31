@@ -396,7 +396,19 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
   .svg-container{width:120px;height:120px}
 }
 
-</style>
+
+    /* Custom Modals */
+    .custom-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 10001; animation: fadeIn 0.2s; }
+    .custom-modal-box { background: #1a1a1a; border: 1px solid #00f2ff; padding: 25px; border-radius: 20px; color: white; text-align: center; max-width: 340px; width: 90%; box-shadow: 0 0 30px rgba(0,242,255,0.2); }
+    .custom-modal-box p { margin-bottom: 20px; font-size: 1rem; line-height: 1.5; }
+    .custom-modal-box input { width: 100%; padding: 12px; margin-bottom: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; outline: none; }
+    .custom-modal-box input:focus { border-color: #00f2ff; }
+    .custom-modal-btns { display: flex; gap: 10px; justify-content: center; }
+    .custom-modal-btn { padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    .custom-modal-btn.primary { background: #00f2ff; color: black; }
+    .custom-modal-btn.secondary { background: rgba(255,255,255,0.1); color: white; }
+    .custom-modal-btn:hover { transform: scale(1.05); opacity: 0.9; }
+    </style>
 
 <style>
         :root {
@@ -406,7 +418,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
           --z-overlay: 1000;
           --z-system: 5000;
         }
-      </style><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css" id="hljs-theme"><style>
+      </style><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css" id="hljs-theme"><style>
     /* =========================
        SOLAR NEBULA PRO — CORE CSS
     ========================= */
@@ -771,7 +783,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
                    <input type="text" id="infodoseNameInput" placeholder="Nome: World System..." style="width:100%;margin-bottom:8px;padding:8px;border-radius:6px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#fff">
                    
                    <div class="section-title" style="margin-top:8px">CONEXÃO NEURAL (SK)</div>
-                   <input type="password" id="apiKeyInput" placeholder="sk-or-..." autocomplete="off" style="width:100%;margin-bottom:6px;padding:8px;border-radius:6px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#fff">
+                   <input type="password" id="apiKeyInput_1" placeholder="sk-or-..." autocomplete="off" style="width:100%;margin-bottom:6px;padding:8px;border-radius:6px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#fff">
                    <input type="text" id="modelInput" placeholder="Modelo AI..." style="width:100%;margin-bottom:8px;padding:8px;border-radius:6px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#fff">
                    
                   <div class="model-toggle">
@@ -934,6 +946,75 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
 
 
   <script>
+    // Pointer Events Fallback Helper
+    const addPointerListener = (el, type, cb, opts) => {
+        if (!el) return;
+        el.addEventListener(type, cb, opts);
+        if (!window.PointerEvent) {
+            const mouseType = type.replace('pointer', 'mouse');
+            const touchType = type.replace('pointer', 'touch');
+            el.addEventListener(mouseType, cb, opts);
+            el.addEventListener(touchType, cb, opts);
+        }
+    };
+    
+    const CustomUI = {
+        alert: (msg) => {
+            return new Promise(resolve => {
+                const div = document.createElement('div');
+                div.className = 'custom-modal-overlay';
+                div.innerHTML = `<div class="custom-modal-box"><p>${msg}</p><div class="custom-modal-btns"><button class="custom-modal-btn primary">OK</button></div></div>`;
+                document.body.appendChild(div);
+                div.querySelector('button').onclick = () => { div.remove(); resolve(); };
+            });
+        },
+        confirm: (msg) => {
+            return new Promise(resolve => {
+                const div = document.createElement('div');
+                div.className = 'custom-modal-overlay';
+                div.innerHTML = `<div class="custom-modal-box"><p>${msg}</p><div class="custom-modal-btns"><button class="custom-modal-btn secondary" id="m-no">Não</button><button class="custom-modal-btn primary" id="m-yes">Sim</button></div></div>`;
+                document.body.appendChild(div);
+                div.querySelector('#m-yes').onclick = () => { div.remove(); resolve(true); };
+                div.querySelector('#m-no').onclick = () => { div.remove(); resolve(false); };
+            });
+        },
+        prompt: (msg, def = '') => {
+            return new Promise(resolve => {
+                const div = document.createElement('div');
+                div.className = 'custom-modal-overlay';
+                div.innerHTML = `<div class="custom-modal-box"><p>${msg}</p><input type="text" value="${def}"><div class="custom-modal-btns"><button class="custom-modal-btn secondary" id="m-cancel">Cancelar</button><button class="custom-modal-btn primary" id="m-ok">OK</button></div></div>`;
+                document.body.appendChild(div);
+                const input = div.querySelector('input');
+                div.querySelector('#m-ok').onclick = () => { const val = input.value; div.remove(); resolve(val); };
+                div.querySelector('#m-cancel').onclick = () => { div.remove(); resolve(null); };
+                input.focus();
+            });
+        }
+    };
+    window.alert = CustomUI.alert;
+    // We don't replace confirm/prompt globally because they are sync, 
+    // but we provide CustomUI for future refactoring.
+    
+const FOOTER_TEXTS = { closed:{ritual:["tocar o campo é consentir","registro aguarda presença"],tecnico:["latência detectada","aguardando input"]}, open:{sustentado:["campo ativo","consciência expandida"],estavel:["sinal estabilizado","link neural firme"]}, loading:["sincronizando neuro-link...","buscando no éter...","decodificando sinal..."] };
+const KODUX = {
+    ARQUETIPOS: { "Atlas":{Essencia:"Planejador"}, "Nova":{Essencia:"Inspira"}, "Vitalis":{Essencia:"Momentum"}, "Pulse":{Essencia:"Emocional"}, "Artemis":{Essencia:"Descoberta"}, "Serena":{Essencia:"Cuidado"}, "Kaos":{Essencia:"Transformador"}, "Genus":{Essencia:"Fabricus"}, "Lumine":{Essencia:"Alegria"}, "Solus":{Essencia:"Sabedoria"}, "Rhea":{Essencia:"Vínculo"}, "Aion":{Essencia:"Tempo"} },
+    PROJETO: { "I. INTRODUÇÃO":{fase:"KODUX (Δ³)",arquetipos:["Atlas","Nova","Pulse"]}, "II. ATO I":{fase:"BLLUE (Δ⁶)",arquetipos:["Vitalis","Pulse","Genus"]}, "III. ATO II":{fase:"EXPANSÃO (Δ⁹)",arquetipos:["Genus","Nova","Vitalis"]}, "IV. ATO III":{fase:"CONVERGÊNCIA (Δ⁹)",arquetipos:["Genus","Aion","Pulse"]}, "V. EPÍLOGO":{fase:"VERBO ETERNO (Δ⁷)",arquetipos:["Atlas","Aion","Genus"]} }
+};
+const STORAGE = {
+    API_KEY: 'di_apiKey',
+    MODEL: 'di_modelName',
+    SYSTEM_ROLE: 'di_systemRole',
+    USER_ID: 'di_userName',
+    BG_IMAGE: 'di_bgImage',
+    CUSTOM_CSS: 'di_customCss',
+    SOLAR_MODE: 'di_solarMode',
+    SOLAR_AUTO: 'di_solarAuto',
+    INFODOSE_NAME: 'di_infodoseName',
+    ASSISTANT_ENABLED: 'di_assistantEnabled',
+    TRAINING_ACTIVE: 'di_trainingActive',
+    TRAINING_TEXT: 'di_trainingText',
+    MESSAGES: 'di_messages'
+};
     lucide.createIcons();
 
     const els = {
@@ -1030,7 +1111,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
     let SESSION_PASSWORD = null;
 
     function saveUIState() {
-        const mode = state.isOrb ? 'orb' : (state.isHud ? 'hud' : 'card');
+        const mode = uiState.isOrb ? 'orb' : (uiState.isHud ? 'hud' : 'card');
         const uiState = {
             mode: mode,
             left: els.card.style.left,
@@ -1241,7 +1322,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
 
     // --- CINEMATIC GESTURES & MODES (REFINED V7) ---
 
-    let state = {
+    let uiState = {
         isOrb: false,
         isHud: false,
         isDragging: false,
@@ -1263,20 +1344,20 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
     window.addEventListener('pointerup', handleEnd, { passive: false });
 
     // Opening Configs
-    els.avatarTgt.addEventListener('click', (e)=>{ if(!state.isOrb && !state.isHud) openManager(); });
+    els.avatarTgt.addEventListener('click', (e)=>{ if(!uiState.isOrb && !uiState.isHud) openManager(); });
     els.orbMenuTrigger.addEventListener('click', (e)=>{ e.stopPropagation(); window.setMode('card'); toggleSection('systemCard', true); });
     els.hudMenuBtn.addEventListener('click', (e)=>{ e.stopPropagation(); window.setMode('card'); toggleSection('systemCard', true); });
     
     // Open Config from Header click in HUD Mode
     els.header.addEventListener('click', (e) => {
-        if(state.isHud && !state.isDragging && !e.target.closest('.hud-menu-btn')) {
+        if(uiState.isHud && !uiState.isDragging && !e.target.closest('.hud-menu-btn')) {
              window.setMode('card');
              toggleSection('systemCard', true);
         }
     });
 
     els.card.addEventListener('contextmenu', (e)=>{
-        if(state.isOrb || state.isHud) { e.preventDefault(); window.setMode('card'); }
+        if(uiState.isOrb || uiState.isHud) { e.preventDefault(); window.setMode('card'); }
     });
 
     function handleStart(e) {
@@ -1284,26 +1365,26 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
       if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'BUTTON' && !e.target.closest('.orb-menu-trigger'))) return;
       
       // No modo Card, só permitir arrastar pelo Header
-      if(!state.isOrb && !state.isHud && !els.header.contains(e.target)) return;
+      if(!uiState.isOrb && !uiState.isHud && !els.header.contains(e.target)) return;
 
-      state.startX = e.clientX;
-      state.startY = e.clientY;
-      state.pointerId = e.pointerId;
+      uiState.startX = e.clientX;
+      uiState.startY = e.clientY;
+      uiState.pointerId = e.pointerId;
 
       // Se já for Orb/Hud -> Iniciar arraste imediato
-      if(state.isOrb || state.isHud) {
-          state.isDragging = true;
+      if(uiState.isOrb || uiState.isHud) {
+          uiState.isDragging = true;
           try { els.card.setPointerCapture(e.pointerId); } catch(err){}
           
           const rect = els.card.getBoundingClientRect();
-          state.dragOffsetX = e.clientX - rect.left;
-          state.dragOffsetY = e.clientY - rect.top;
+          uiState.dragOffsetX = e.clientX - rect.left;
+          uiState.dragOffsetY = e.clientY - rect.top;
           els.card.style.transition = 'none';
           return;
       }
 
       // Se for Card: Iniciar timer de Long Press, mas monitorar movimento para "swipe up"
-      state.timer = setTimeout(() => {
+      uiState.timer = setTimeout(() => {
           transmuteToOrb(e);
           saveUIState();
       }, LONG_PRESS_MS);
@@ -1311,23 +1392,23 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
     
     function handleMove(e) {
       // Detecção de Swipe Up / Side Drag no modo Card antes do timer acabar
-      if(!state.isOrb && !state.isHud && state.timer) {
-          const dx = e.clientX - state.startX;
-          const dy = e.clientY - state.startY;
+      if(!uiState.isOrb && !uiState.isHud && uiState.timer) {
+          const dx = e.clientX - uiState.startX;
+          const dy = e.clientY - uiState.startY;
           const dist = Math.hypot(dx, dy);
           
           // Se moveu o suficiente (swipe), cancelar timer e virar Orb imediatamente
           // Lógica: Se arrastar pra cima (dy < -10) ou muito pros lados (dx > 18)
           if (dist > 12 && (dy < -10 || Math.abs(dx) > 18)) { 
-              clearTimeout(state.timer); state.timer = null;
+              clearTimeout(uiState.timer); uiState.timer = null;
               
               // Transmutar e continuar arrastando
               transmuteToOrb(e); 
               
               // Recalcular offset para o drag não "pular"
               const rect = els.card.getBoundingClientRect();
-              state.dragOffsetX = e.clientX - rect.left;
-              state.dragOffsetY = e.clientY - rect.top;
+              uiState.dragOffsetX = e.clientX - rect.left;
+              uiState.dragOffsetY = e.clientY - rect.top;
               try { els.card.setPointerCapture(e.pointerId); } catch(err){}
               els.card.style.transition = 'none';
           }
@@ -1336,21 +1417,21 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
           // Deixamos o browser decidir o scroll se não for drag.
       }
     
-      if(!state.isDragging) return;
+      if(!uiState.isDragging) return;
 
       e.preventDefault(); // Prevenir scroll da página enquanto arrasta o Orb/HUD
 
-      if(state.isOrb) {
-          const x = e.clientX - state.dragOffsetX;
-          const y = e.clientY - state.dragOffsetY;
+      if(uiState.isOrb) {
+          const x = e.clientX - uiState.dragOffsetX;
+          const y = e.clientY - uiState.dragOffsetY;
           els.card.style.left = `${x}px`;
           els.card.style.top = `${y}px`;
           
           if(y < HUD_SNAP_THRESHOLD) els.snapZone.classList.add('active');
           else els.snapZone.classList.remove('active');
 
-      } else if (state.isHud) {
-          const deltaY = e.clientY - state.startY;
+      } else if (uiState.isHud) {
+          const deltaY = e.clientY - uiState.startY;
           if(deltaY > 0) {
              els.card.style.transform = `translateX(-50%) translateY(${deltaY * 0.4}px)`;
              if(deltaY > SWIPE_DOWN_THRESHOLD) els.snapZone.classList.add('active');
@@ -1360,23 +1441,23 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
     }
     
     function handleEnd(e) {
-      if(state.timer){ clearTimeout(state.timer); state.timer=null; }
+      if(uiState.timer){ clearTimeout(uiState.timer); uiState.timer=null; }
       
-      if(state.isDragging) {
-          state.isDragging = false;
-          try { els.card.releasePointerCapture && els.card.releasePointerCapture(state.pointerId); } catch(err){}
+      if(uiState.isDragging) {
+          uiState.isDragging = false;
+          try { els.card.releasePointerCapture && els.card.releasePointerCapture(uiState.pointerId); } catch(err){}
           els.card.style.transition = ''; 
           els.snapZone.classList.remove('active');
 
-          if(state.isOrb) {
+          if(uiState.isOrb) {
               const rect = els.card.getBoundingClientRect();
               if(rect.top < HUD_SNAP_THRESHOLD) {
                   setMode('hud');
               } else {
                   saveUIState();
               }
-          } else if (state.isHud) {
-              const deltaY = e.clientY - state.startY;
+          } else if (uiState.isHud) {
+              const deltaY = e.clientY - uiState.startY;
               if (deltaY > SWIPE_DOWN_THRESHOLD) {
                   const x = e.clientX - 34; 
                   const y = e.clientY - 10;
@@ -1389,11 +1470,11 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
           }
       } else {
           // Clique simples no header do Card (Toggle)
-          if(!state.isOrb && !state.isHud && els.header.contains(e.target)) {
+          if(!uiState.isOrb && !uiState.isHud && els.header.contains(e.target)) {
                toggleCardState();
           }
       }
-      state.pointerId = null;
+      uiState.pointerId = null;
     }
     
     function transmuteToOrb(eOrX) {
@@ -1410,23 +1491,23 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
       els.card.style.left = (x - 34) + 'px'; 
       els.card.style.top = (y - 34) + 'px';
       
-      state.isOrb=true; state.isHud=false;
+      uiState.isOrb=true; uiState.isHud=false;
       
       // Iniciar drag imediatamente
-      state.isDragging = true;
+      uiState.isDragging = true;
       if(ev && ev.pointerId) {
-          state.pointerId = ev.pointerId;
+          uiState.pointerId = ev.pointerId;
           try { els.card.setPointerCapture(ev.pointerId); } catch(e){}
           const rect = els.card.getBoundingClientRect();
-          state.dragOffsetX = x - rect.left;
-          state.dragOffsetY = y - rect.top;
+          uiState.dragOffsetX = x - rect.left;
+          uiState.dragOffsetY = y - rect.top;
       }
 
       updateModeButtons('orb');
     }
 
     function revertToCard() {
-      state.isOrb=false; state.isHud=false;
+      uiState.isOrb=false; uiState.isHud=false;
       els.card.style.transition='all 0.5s var(--ease-smooth)'; 
       els.card.style.left=''; els.card.style.top=''; 
       els.card.style.width=''; els.card.style.height=''; 
@@ -1441,12 +1522,12 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
         if(mode === 'card') {
             revertToCard();
         } else if (mode === 'orb') {
-            state.isOrb = true; state.isHud = false;
+            uiState.isOrb = true; uiState.isHud = false;
             els.card.classList.add('orb', 'closed');
             els.card.classList.remove('hud', 'content-visible');
             els.card.style.transform = 'none';
         } else if (mode === 'hud') {
-            state.isHud = true; state.isOrb = false;
+            uiState.isHud = true; uiState.isOrb = false;
             els.card.classList.add('hud', 'closed'); 
             els.card.classList.remove('orb', 'content-visible');
             els.card.style.top = ''; 
@@ -1507,7 +1588,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
      * Centraliza estado e reage automaticamente a mudanças.
      */
     const FusionEngine = {
-        state: {
+        uiState: {
             apiKey: '',
             infodoseName: '',
             modelName: 'nvidia/nemotron-3-nano-30b-a3b:free',
@@ -1520,14 +1601,14 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
         
         // Loads from localStorage + Defaults
         init() {
-            this.state.apiKey = localStorage.getItem('di_apiKey') || '';
-            this.state.infodoseName = localStorage.getItem('di_infodoseName') || '';
-            this.state.modelName = localStorage.getItem('di_modelName') || this.state.modelName;
-            this.state.assistantEnabled = (localStorage.getItem('di_assistantEnabled') === '1');
-            this.state.trainingActive = (localStorage.getItem('di_trainingActive') !== '0'); 
-            this.state.trainingText = localStorage.getItem('di_trainingText') || '';
-            this.state.trainingFileName = localStorage.getItem('di_trainingFileName') || '';
-            this.state.zenMode = document.body.classList.contains('zen-mode');
+            this.uiState.apiKey = localStorage.getItem('di_apiKey') || '';
+            this.uiState.infodoseName = localStorage.getItem('di_infodoseName') || '';
+            this.uiState.modelName = localStorage.getItem('di_modelName') || this.uiState.modelName;
+            this.uiState.assistantEnabled = (localStorage.getItem('di_assistantEnabled') === '1');
+            this.uiState.trainingActive = (localStorage.getItem('di_trainingActive') !== '0'); 
+            this.uiState.trainingText = localStorage.getItem('di_trainingText') || '';
+            this.uiState.trainingFileName = localStorage.getItem('di_trainingFileName') || '';
+            this.uiState.zenMode = document.body.classList.contains('zen-mode');
 
             this.render(); // Initial UI Sync
             this.bindEvents();
@@ -1536,7 +1617,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
 
         // Update State & Trigger Reactivity
         set(key, value) {
-            this.state[key] = value;
+            this.uiState[key] = value;
             
             // Persist
             if(key === 'apiKey') localStorage.setItem('di_apiKey', value);
@@ -1556,7 +1637,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
                      document.body.classList.remove('zen-mode');
                      document.getElementById('mantra-toggle').classList.remove('collapsed');
                  }
-                 // save UI state handles this in main script, but we sync here
+                 // save UI uiState handles this in main script, but we sync here
             }
 
             this.render();
@@ -1567,7 +1648,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
         render() {
              // Top Info
              const iEl = document.getElementById('displayInfodose');
-             if(iEl) iEl.innerText = 'Infodose: ' + (this.state.infodoseName || '—');
+             if(iEl) iEl.innerText = 'Infodose: ' + (this.uiState.infodoseName || '—');
 
              // Inputs (if not focused to avoid cursor jumping, or force update if needed)
              const setVal = (id, v) => {
@@ -1575,25 +1656,25 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
                  if(el && document.activeElement !== el) el.value = v;
              };
              
-             setVal('apiKeyInput', this.state.apiKey);
-             setVal('modelInput', this.state.modelName);
-             setVal('infodoseNameInput', this.state.infodoseName);
-             setVal('modelSelect', this.state.modelName); // Select box
+             setVal('apiKeyInput', this.uiState.apiKey);
+             setVal('modelInput', this.uiState.modelName);
+             setVal('infodoseNameInput', this.uiState.infodoseName);
+             setVal('modelSelect', this.uiState.modelName); // Select box
 
              // Toggles
              const setCheck = (id, v) => { const el = document.getElementById(id); if(el) el.checked = v; };
-             setCheck('assistantActiveCheckbox', this.state.assistantEnabled);
-             setCheck('trainingActiveCheckbox', this.state.trainingActive);
-             setCheck('zenModeCheckbox', this.state.zenMode);
+             setCheck('assistantActiveCheckbox', this.uiState.assistantEnabled);
+             setCheck('trainingActiveCheckbox', this.uiState.trainingActive);
+             setCheck('zenModeCheckbox', this.uiState.zenMode);
 
              // Labels
              const tLabel = document.getElementById('trainingFileName');
-             if(tLabel) tLabel.innerText = this.state.trainingFileName || 'Vazio';
+             if(tLabel) tLabel.innerText = this.uiState.trainingFileName || 'Vazio';
 
              // Main Toggle Button Logic
              const btn = document.getElementById('toggleBtn');
              if(btn) {
-                if(this.state.assistantEnabled) {
+                if(this.uiState.assistantEnabled) {
                     btn.classList.add('active');
                     btn.title = "Assistant ON";
                 } else {
@@ -1603,7 +1684,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
              }
         },
 
-        // Auto-bind inputs to state (Two-way binding feeling)
+        // Auto-bind inputs to uiState (Two-way binding feeling)
         bindEvents() {
             const bind = (id, key, type='text') => {
                 const el = document.getElementById(id);
@@ -1625,8 +1706,8 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
 
             // Special: Main Toggle Button
             document.getElementById('toggleBtn')?.addEventListener('click', () => {
-                this.set('assistantEnabled', !this.state.assistantEnabled);
-                showToaster(this.state.assistantEnabled ? 'Assistant ON' : 'Assistant OFF', 'default');
+                this.set('assistantEnabled', !this.uiState.assistantEnabled);
+                showToaster(this.uiState.assistantEnabled ? 'Assistant ON' : 'Assistant OFF', 'default');
             });
             
             // Visual trigger on Top Info click
@@ -1647,7 +1728,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
         
         // Helper for AI Calls to get current snapshot
         getSnapshot() {
-            return { ...this.state };
+            return { ...this.uiState };
         }
     };
 
@@ -1713,17 +1794,17 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
                 });
                 meta.appendChild(crystalBtn);
                 b.appendChild(meta);
-                b.dataset.state = '';
+                b.dataset.uiState = '';
                 b.addEventListener('click', (ev) => {
                     if (ev.target.closest('.meta')) return;
-                    const alreadySpoken = b.dataset.state === 'spoken';
+                    const alreadySpoken = b.dataset.uiState === 'spoken';
                     if (!alreadySpoken) {
                         try { speechSynthesis.cancel(); } catch(e){}
                         const textToSpeak = b.querySelector('.block-body') ? b.querySelector('.block-body').innerText : body;
                         speakText(textToSpeak);
-                        b.classList.add('clicked'); b.dataset.state = 'spoken';
+                        b.classList.add('clicked'); b.dataset.uiState = 'spoken';
                     } else {
-                        b.classList.add('expanded'); b.dataset.state = '';
+                        b.classList.add('expanded'); b.dataset.uiState = '';
                         if (!FusionEngine.state.assistantEnabled) FusionEngine.set('assistantEnabled', true);
                         const blockText = `${titles[j]}\n\n${body}`;
                         showLoading('Pulso em Expansão...');
@@ -1875,7 +1956,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
       document.querySelector('[data-action="prev"]').addEventListener('click', () => changePage(-1));
       document.querySelector('[data-action="next"]').addEventListener('click', () => changePage(1));
 
-      // Button "Save Manual" just closes the modal now, since state is reactive
+      // Button "Save Manual" just closes the modal now, since uiState is reactive
       document.getElementById('saveSystemBtn').addEventListener('click', () => {
          toggleSection('systemCard', false);
          showToaster('Configurações Persistidas', 'success');
@@ -2004,7 +2085,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
   </svg>
     
   <div class="sky-layer"><div class="sun-background"></div></div>
-  <div id="particles-js"></div>
+  <div id="particles-js-dock"></div>
   <div id="bg-fake-custom"></div> 
   <div id="nv-toast"></div>
   <div id="modeIndicator">CARREGANDO nO.Sºlar...</div>
@@ -2028,7 +2109,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
     <div class="input-row">
         <button class="btn-icon" id="btnVoice" title="Voz"><svg><use href="#icon-voice"></use></svg></button>
         <button class="btn-icon" id="btnUploadFile" title="Enviar Arquivo"><svg><use href="#icon-upload"></use></svg></button>
-        <input type="text" id="userInput" class="glass-input" placeholder="Emitir pulso..." autocomplete="off">
+        <input type="text" id="userInputDock" class="glass-input" placeholder="Emitir pulso..." autocomplete="off">
         <button class="btn-icon btn-primary" id="btnSend" title="Enviar"><svg><use href="#icon-send"></use></svg></button>
     </div>
   </div>
@@ -2037,7 +2118,7 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
     <div class="drawer-content">
       <div class="drawer-header"><h3>Configuração Neural</h3><button class="btn-icon" onclick="toggleDrawer('drawerSettings')">✕</button></div>
       <div class="drawer-body">
-        <div class="form-group"><label>Chave Dual (API Key)</label><input type="password" id="apiKeyInput" class="glass-input" style="border-radius:8px;width:100%" placeholder="sk-..."></div>
+        <div class="form-group"><label>Chave Dual (API Key)</label><input type="password" id="apiKeyInput_2" class="glass-input" style="border-radius:8px;width:100%" placeholder="sk-..."></div>
         <div class="form-group"><label>Dual (Prompt)</label><textarea id="systemRoleInput" class="glass-textarea" placeholder="Você é o Oráculo..."></textarea></div>
         <hr style="border-color:rgba(255,255,255,0.1);margin:15px 0;">
         <div class="form-group"><label>Seu (Style)</label><input type="file" id="cssUploadInput" accept=".css,text/plain" style="margin-bottom:5px;font-size:0.8rem;"><textarea id="customCssInput" class="glass-textarea" placeholder="Cole CSS aqui..."></textarea><button class="btn-block" id="btnClearCss" style="margin-top:5px;color:var(--danger)">Remover CSS</button></div>
@@ -2076,27 +2157,10 @@ iframe#frame{width:100%;height:100%;border:0;transition:opacity .4s;opacity:1}
    - Core: Fractal 3-6-9-7 + Ciclos Solares
 ========================================================= */
 
-const STORAGE = {
-    API_KEY: 'di_apiKey',
-    MODEL: 'di_modelName',
-    SYSTEM_ROLE: 'di_systemRole',
-    USER_ID: 'di_userName',
-    BG_IMAGE: 'di_bgImage',
-    CUSTOM_CSS: 'di_customCss',
-    SOLAR_MODE: 'di_solarMode',
-    SOLAR_AUTO: 'di_solarAuto',
-    INFODOSE_NAME: 'di_infodoseName',
-    ASSISTANT_ENABLED: 'di_assistantEnabled',
-    TRAINING_ACTIVE: 'di_trainingActive',
-    TRAINING_TEXT: 'di_trainingText',
-    MESSAGES: 'di_messages'
-};
+
 
 // KODUX ARQUÉTIPOS E FASES
-const KODUX = {
-    ARQUETIPOS: { "Atlas":{Essencia:"Planejador"}, "Nova":{Essencia:"Inspira"}, "Vitalis":{Essencia:"Momentum"}, "Pulse":{Essencia:"Emocional"}, "Artemis":{Essencia:"Descoberta"}, "Serena":{Essencia:"Cuidado"}, "Kaos":{Essencia:"Transformador"}, "Genus":{Essencia:"Fabricus"}, "Lumine":{Essencia:"Alegria"}, "Solus":{Essencia:"Sabedoria"}, "Rhea":{Essencia:"Vínculo"}, "Aion":{Essencia:"Tempo"} },
-    PROJETO: { "I. INTRODUÇÃO":{fase:"KODUX (Δ³)",arquetipos:["Atlas","Nova","Pulse"]}, "II. ATO I":{fase:"BLLUE (Δ⁶)",arquetipos:["Vitalis","Pulse","Genus"]}, "III. ATO II":{fase:"EXPANSÃO (Δ⁹)",arquetipos:["Genus","Nova","Vitalis"]}, "IV. ATO III":{fase:"CONVERGÊNCIA (Δ⁹)",arquetipos:["Genus","Aion","Pulse"]}, "V. EPÍLOGO":{fase:"VERBO ETERNO (Δ⁷)",arquetipos:["Atlas","Aion","Genus"]} }
-};
+
 
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2149,7 +2213,7 @@ function initDIConstants() {
 // Chamar ao carregar a página
 document.addEventListener('DOMContentLoaded', initDIConstants);
 
-const FOOTER_TEXTS = { closed:{ritual:["tocar o campo é consentir","registro aguarda presença"],tecnico:["latência detectada","aguardando input"]}, open:{sustentado:["campo ativo","consciência expandida"],estavel:["sinal estabilizado","link neural firme"]}, loading:["sincronizando neuro-link...","buscando no éter...","decodificando sinal..."] };
+
 
 let lastText = null;
 function getRandomText(arr){ if(!arr||arr.length===0)return"Processando..."; let t; do{t=arr[Math.floor(Math.random()*arr.length)];}while(t===lastText&&arr.length>1); lastText=t; return t; }
@@ -2302,7 +2366,7 @@ const Utils = {
    MAIN APP CONTROLLER
    --------------------------------------------------------- */
 const App = {
-    state: { open: false, messages: [], isAutoSolar: true, solarMode: 'night', isProcessing: false, isListening: false, recognition: null },
+    uiState: { open: false, messages: [], isAutoSolar: true, solarMode: 'night', isProcessing: false, isListening: false, recognition: null },
     
     init() {
         const s = localStorage;
@@ -2314,10 +2378,10 @@ const App = {
 
         document.getElementById('inputUserId').value = s.getItem(STORAGE.USER_ID) || 'Viajante';
         document.getElementById('inputModel').value = s.getItem(STORAGE.MODEL) || 'openai/gpt-oss-20b:free';
-        this.state.isAutoSolar = s.getItem(STORAGE.SOLAR_AUTO) !== 'false';
+        this.uiState.isAutoSolar = s.getItem(STORAGE.SOLAR_AUTO) !== 'false';
         
         // CORREÇÃO: Força o modo correto na inicialização
-        if (this.state.isAutoSolar) this.autoByTime(); else this.setMode(s.getItem(STORAGE.SOLAR_MODE) || 'night');
+        if (this.uiState.isAutoSolar) this.autoByTime(); else this.setMode(s.getItem(STORAGE.SOLAR_MODE) || 'night');
 
         this.indexedDB.loadCustomCSS();
         this.indexedDB.loadBackground();
@@ -2334,19 +2398,19 @@ const App = {
     // --- VOZ ---
     setupVoiceSystem() {
         if (!('webkitSpeechRecognition' in window)) return;
-        this.state.recognition = new webkitSpeechRecognition();
-        this.state.recognition.lang = 'pt-BR';
-        this.state.recognition.continuous = true; 
-        this.state.recognition.interimResults = true;
-        this.state.recognition.onstart = () => { this.state.isListening = true; document.getElementById('btnVoice').classList.add('listening'); this.showToast("🎙️ Voz Ativa..."); };
-        this.state.recognition.onend = () => { if (this.state.isListening) try { this.state.recognition.start(); } catch(e){} else document.getElementById('btnVoice').classList.remove('listening'); };
-        this.state.recognition.onresult = (e) => { let t=''; for(let i=e.resultIndex;i<e.results.length;++i) t+=e.results[i][0].transcript; document.getElementById('userInput').value=t; };
-        this.state.recognition.onerror = (e) => { if(e.error!=='no-speech') { this.state.isListening=false; document.getElementById('btnVoice').classList.remove('listening'); } };
+        this.uiState.recognition = new webkitSpeechRecognition();
+        this.uiState.recognition.lang = 'pt-BR';
+        this.uiState.recognition.continuous = true; 
+        this.uiState.recognition.interimResults = true;
+        this.uiState.recognition.onstart = () => { this.uiState.isListening = true; document.getElementById('btnVoice').classList.add('listening'); this.showToast("🎙️ Voz Ativa..."); };
+        this.uiState.recognition.onend = () => { if (this.uiState.isListening) try { this.uiState.recognition.start(); } catch(e){} else document.getElementById('btnVoice').classList.remove('listening'); };
+        this.uiState.recognition.onresult = (e) => { let t=''; for(let i=e.resultIndex;i<e.results.length;++i) t+=e.results[i][0].transcript; document.getElementById('userInput').value=t; };
+        this.uiState.recognition.onerror = (e) => { if(e.error!=='no-speech') { this.uiState.isListening=false; document.getElementById('btnVoice').classList.remove('listening'); } };
     },
     toggleVoice() {
-        if (!this.state.recognition) return;
-        if (this.state.isListening) { this.state.isListening = false; this.state.recognition.stop(); }
-        else { window.speechSynthesis.cancel(); document.getElementById('userInput').value = ''; try { this.state.recognition.start(); } catch(e){} }
+        if (!this.uiState.recognition) return;
+        if (this.uiState.isListening) { this.uiState.isListening = false; this.uiState.recognition.stop(); }
+        else { window.speechSynthesis.cancel(); document.getElementById('userInput').value = ''; try { this.uiState.recognition.start(); } catch(e){} }
     },
 
     // --- UPLOAD ---
@@ -2374,7 +2438,7 @@ const App = {
             this.addFileMessage(file, previewHTML, size);
             const fractal = await KoblluxCore.process(content);
             this.addMessage('system', `Memória Fractal: ${fileName}\n${fractal.log}`);
-            this.state.messages.push({ role: 'user', content: `[ARQUIVO: ${fileName}]\n[TRINITY: ${JSON.stringify(fractal.trinity)}]\n${content}\n[SELO: ${fractal.seal}]` });
+            this.uiState.messages.push({ role: 'user', content: `[ARQUIVO: ${fileName}]\n[TRINITY: ${JSON.stringify(fractal.trinity)}]\n${content}\n[SELO: ${fractal.seal}]` });
             this.cancelUpload();
         };
         reader.readAsText(file);
@@ -2391,7 +2455,7 @@ const App = {
     async handleSend() {
         const input = document.getElementById('userInput');
         const txt = input.value.trim();
-        if (!txt || this.state.isProcessing) return;
+        if (!txt || this.uiState.isProcessing) return;
 
         if(txt.toLowerCase() === '/atlas') {
             input.value = ''; this.addMessage('user', txt);
@@ -2410,11 +2474,11 @@ const App = {
         const fractal = await KoblluxCore.process(txt);
         input.value = '';
         this.addMessage('user', txt);
-        this.state.isProcessing = true;
+        this.uiState.isProcessing = true;
         document.getElementById('field-toggle-handle').innerHTML = `<span class="footer-dot pulse"></span> ${getRandomText(FOOTER_TEXTS.loading)}`;
         
         const key = localStorage.getItem(STORAGE.API_KEY);
-        if (!key && !document.getElementById('inputModel').value.includes(':free')) { this.announce("Erro: API Key."); this.state.isProcessing = false; return; }
+        if (!key && !document.getElementById('inputModel').value.includes(':free')) { this.announce("Erro: API Key."); this.uiState.isProcessing = false; return; }
 
         try {
             document.body.classList.add('loading');
@@ -2425,7 +2489,7 @@ const App = {
                     model: document.getElementById('inputModel').value,
                     messages: [ 
                         { role: 'system', content: document.getElementById('systemRoleInput').value },
-                        ...this.state.messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+                        ...this.uiState.messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
                         { role: 'user', content: `${txt}\n\n[KOBLLUX]\nUNO:${fractal.trinity.UNO}\nSELO:${fractal.seal}` } 
                     ]
                 })
@@ -2437,13 +2501,13 @@ const App = {
             if (/^\s*(<!doctype html|<html)/i.test(aiContent)) {
                this.addHTMLViewer(aiContent);
                // Adiciona ao histórico sem renderizar de novo
-               this.state.messages.push({ role: 'assistant', content: aiContent });
+               this.uiState.messages.push({ role: 'assistant', content: aiContent });
             } else {
                this.addMessage('ai', aiContent);
             }
             
         } catch (e) { this.announce("Erro conexão."); } 
-        finally { document.body.classList.remove('loading'); this.state.isProcessing = false; this.toggleField(this.state.open, true); }
+        finally { document.body.classList.remove('loading'); this.uiState.isProcessing = false; this.toggleField(this.uiState.open, true); }
     },
 
     addMessage(role, text) {
@@ -2462,7 +2526,7 @@ const App = {
                   <button class="tool-btn" onclick="DownloadUtils.exportPdf(this)" title="PDF"><svg><use href="#icon-pdf"></use></svg></button>` : 
                   `<button class="tool-btn" onclick="Utils.edit(this)" title="Editar"><svg><use href="#icon-edit"></use></svg></button>`}
             </div>`;
-            this.state.messages.push({ role: role==='ai'?'assistant':'user', content: text });
+            this.uiState.messages.push({ role: role==='ai'?'assistant':'user', content: text });
         }
         d.innerHTML = html;
         if (role === 'ai') d.querySelectorAll('pre').forEach(pre => { 
@@ -2483,32 +2547,32 @@ const App = {
     },
 
     /* --- GERAL --- */
-    speakText(text) { if (!text || this.state.isListening) return; window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang='pt-BR'; u.rate=1.1; window.speechSynthesis.speak(u); },
+    speakText(text) { if (!text || this.uiState.isListening) return; window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang='pt-BR'; u.rate=1.1; window.speechSynthesis.speak(u); },
     announce(msg) { this.showToast(msg); },
     showToast(msg, err=false) { const t = document.getElementById('nv-toast'); t.textContent=msg; t.style.borderLeft=err?'4px solid #f44':'4px solid var(--primary)'; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); this.speakText(msg); },
     
     // CORREÇÃO VISUAL: CICLOS SOLARES
     setMode(m) { 
-        this.state.solarMode=m; 
+        this.uiState.solarMode=m; 
         document.body.classList.remove('mode-day', 'mode-sunset', 'mode-night');
         document.body.classList.add(`mode-${m}`); 
         this.updateUI(); 
         localStorage.setItem(STORAGE.SOLAR_MODE, m); 
     },
-    cycleSolar() { const n = this.state.solarMode==='day'?'sunset':(this.state.solarMode==='sunset'?'night':'day'); this.state.isAutoSolar=false; this.setMode(n); },
-    enableAutoSolar() { this.state.isAutoSolar=true; this.autoByTime(); this.announce("Auto Solar"); },
+    cycleSolar() { const n = this.uiState.solarMode==='day'?'sunset':(this.uiState.solarMode==='sunset'?'night':'day'); this.uiState.isAutoSolar=false; this.setMode(n); },
+    enableAutoSolar() { this.uiState.isAutoSolar=true; this.autoByTime(); this.announce("Auto Solar"); },
     autoByTime() { const h=new Date().getHours(); this.setMode((h>=6&&h<17)?'day':(h>=17&&h<19)?'sunset':'night'); },
     updateUI() { 
-        document.getElementById('statusSolarMode').textContent = `${this.state.solarMode.toUpperCase()} ${this.state.isAutoSolar ? '(AUTO)' : '(MAN)'}`; 
+        document.getElementById('statusSolarMode').textContent = `${this.uiState.solarMode.toUpperCase()} ${this.uiState.isAutoSolar ? '(AUTO)' : '(MAN)'}`; 
         document.getElementById('userNameDisplay').textContent = document.getElementById('inputUserId').value; 
     },
-    toggleField(f,s) { this.state.open = f!==undefined?f:!this.state.open; document.getElementById('chat-container').classList.toggle('collapsed', !this.state.open); document.body.classList.toggle('field-closed', !this.state.open); if(!s) this.speakText(getRandomText(FOOTER_TEXTS[this.state.open?'open':'closed']['ritual'])); },
+    toggleField(f,s) { this.uiState.open = f!==undefined?f:!this.uiState.open; document.getElementById('chat-container').classList.toggle('collapsed', !this.uiState.open); document.body.classList.toggle('field-closed', !this.uiState.open); if(!s) this.speakText(getRandomText(FOOTER_TEXTS[this.uiState.open?'open':'closed']['ritual'])); },
     
     // CORREÇÃO CRISTALIZAÇÃO (DECK)
     async crystallizeSession() {
-        if(this.state.messages.length === 0) { this.announce("Vazio não cristaliza."); return; }
-        const title = this.state.messages.find(m => m.role === 'user')?.content.substring(0, 30) || "Memória Sem Nome";
-        await this.indexedDB.saveDeckItem({ id: Date.now(), date: new Date().toLocaleString(), title: title + "...", data: [...this.state.messages] });
+        if(this.uiState.messages.length === 0) { this.announce("Vazio não cristaliza."); return; }
+        const title = this.uiState.messages.find(m => m.role === 'user')?.content.substring(0, 30) || "Memória Sem Nome";
+        await this.indexedDB.saveDeckItem({ id: Date.now(), date: new Date().toLocaleString(), title: title + "...", data: [...this.uiState.messages] });
         await this.renderDeck(); // Força render
         this.announce("Memória Salva.");
         if(!document.getElementById('drawerDeck').classList.contains('open')) toggleDrawer('drawerDeck');
@@ -2537,7 +2601,7 @@ const App = {
         const item = items.find(i => i.id === id);
         if(item) {
             document.getElementById('chat-container').innerHTML = ''; // Limpa tela
-            this.state.messages = []; // Limpa estado
+            this.uiState.messages = []; // Limpa estado
             item.data.forEach(msg => {
                 // Não adiciona no estado aqui, pois addMessage já faz isso se não for system
                 // Mas precisamos evitar duplicação no estado se usarmos addMessage
@@ -2546,7 +2610,7 @@ const App = {
             });
             // Ajuste fino para não duplicar estado (o addMessage já popula)
             // Apenas removemos as últimas duplicatas geradas pelo loop acima se necessário
-            // (Mas como limpamos this.state.messages antes, está OK).
+            // (Mas como limpamos this.uiState.messages antes, está OK).
             
             toggleDrawer('drawerDeck');
             this.announce("Memória restaurada.");
@@ -3016,7 +3080,7 @@ if(window.__RENDERBUS__?.on){
 
 
 
-<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script><script src="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/build/highlight.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script><script>hljs.highlightAll();</script><script>
+</script><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script><script src="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/build/highlight.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script><script>hljs.highlightAll();</script><script>
 /* =========================================================
    DUAL.INFODOSE v7.9 — KOBLLUX VISIO & MEMORIA
    - Fix: Cristalização (Deck) funcional e visível
@@ -3024,27 +3088,10 @@ if(window.__RENDERBUS__?.on){
    - Core: Fractal 3-6-9-7 + Ciclos Solares
 ========================================================= */
 
-const STORAGE = {
-    API_KEY: 'di_apiKey',
-    MODEL: 'di_modelName',
-    SYSTEM_ROLE: 'di_systemRole',
-    USER_ID: 'di_userName',
-    BG_IMAGE: 'di_bgImage',
-    CUSTOM_CSS: 'di_customCss',
-    SOLAR_MODE: 'di_solarMode',
-    SOLAR_AUTO: 'di_solarAuto',
-    INFODOSE_NAME: 'di_infodoseName',
-    ASSISTANT_ENABLED: 'di_assistantEnabled',
-    TRAINING_ACTIVE: 'di_trainingActive',
-    TRAINING_TEXT: 'di_trainingText',
-    MESSAGES: 'di_messages'
-};
+
 
 // KODUX ARQUÉTIPOS E FASES
-const KODUX = {
-    ARQUETIPOS: { "Atlas":{Essencia:"Planejador"}, "Nova":{Essencia:"Inspira"}, "Vitalis":{Essencia:"Momentum"}, "Pulse":{Essencia:"Emocional"}, "Artemis":{Essencia:"Descoberta"}, "Serena":{Essencia:"Cuidado"}, "Kaos":{Essencia:"Transformador"}, "Genus":{Essencia:"Fabricus"}, "Lumine":{Essencia:"Alegria"}, "Solus":{Essencia:"Sabedoria"}, "Rhea":{Essencia:"Vínculo"}, "Aion":{Essencia:"Tempo"} },
-    PROJETO: { "I. INTRODUÇÃO":{fase:"KODUX (Δ³)",arquetipos:["Atlas","Nova","Pulse"]}, "II. ATO I":{fase:"BLLUE (Δ⁶)",arquetipos:["Vitalis","Pulse","Genus"]}, "III. ATO II":{fase:"EXPANSÃO (Δ⁹)",arquetipos:["Genus","Nova","Vitalis"]}, "IV. ATO III":{fase:"CONVERGÊNCIA (Δ⁹)",arquetipos:["Genus","Aion","Pulse"]}, "V. EPÍLOGO":{fase:"VERBO ETERNO (Δ⁷)",arquetipos:["Atlas","Aion","Genus"]} }
-};
+
 
 
 /* ═══════════════════════════════════════════════════════════════
@@ -3097,7 +3144,7 @@ function initDIConstants() {
 // Chamar ao carregar a página
 document.addEventListener('DOMContentLoaded', initDIConstants);
 
-const FOOTER_TEXTS = { closed:{ritual:["tocar o campo é consentir","registro aguarda presença"],tecnico:["latência detectada","aguardando input"]}, open:{sustentado:["campo ativo","consciência expandida"],estavel:["sinal estabilizado","link neural firme"]}, loading:["sincronizando neuro-link...","buscando no éter...","decodificando sinal..."] };
+
 
 let lastText = null;
 function getRandomText(arr){ if(!arr||arr.length===0)return"Processando..."; let t; do{t=arr[Math.floor(Math.random()*arr.length)];}while(t===lastText&&arr.length>1); lastText=t; return t; }
@@ -3250,7 +3297,7 @@ const Utils = {
    MAIN APP CONTROLLER
    --------------------------------------------------------- */
 const App = {
-    state: { open: false, messages: [], isAutoSolar: true, solarMode: 'night', isProcessing: false, isListening: false, recognition: null },
+    uiState: { open: false, messages: [], isAutoSolar: true, solarMode: 'night', isProcessing: false, isListening: false, recognition: null },
     
     init() {
         const s = localStorage;
@@ -3262,10 +3309,10 @@ const App = {
 
         document.getElementById('inputUserId').value = s.getItem(STORAGE.USER_ID) || 'Viajante';
         document.getElementById('inputModel').value = s.getItem(STORAGE.MODEL) || 'openai/gpt-oss-20b:free';
-        this.state.isAutoSolar = s.getItem(STORAGE.SOLAR_AUTO) !== 'false';
+        this.uiState.isAutoSolar = s.getItem(STORAGE.SOLAR_AUTO) !== 'false';
         
         // CORREÇÃO: Força o modo correto na inicialização
-        if (this.state.isAutoSolar) this.autoByTime(); else this.setMode(s.getItem(STORAGE.SOLAR_MODE) || 'night');
+        if (this.uiState.isAutoSolar) this.autoByTime(); else this.setMode(s.getItem(STORAGE.SOLAR_MODE) || 'night');
 
         this.indexedDB.loadCustomCSS();
         this.indexedDB.loadBackground();
@@ -3282,19 +3329,19 @@ const App = {
     // --- VOZ ---
     setupVoiceSystem() {
         if (!('webkitSpeechRecognition' in window)) return;
-        this.state.recognition = new webkitSpeechRecognition();
-        this.state.recognition.lang = 'pt-BR';
-        this.state.recognition.continuous = true; 
-        this.state.recognition.interimResults = true;
-        this.state.recognition.onstart = () => { this.state.isListening = true; document.getElementById('btnVoice').classList.add('listening'); this.showToast("🎙️ Voz Ativa..."); };
-        this.state.recognition.onend = () => { if (this.state.isListening) try { this.state.recognition.start(); } catch(e){} else document.getElementById('btnVoice').classList.remove('listening'); };
-        this.state.recognition.onresult = (e) => { let t=''; for(let i=e.resultIndex;i<e.results.length;++i) t+=e.results[i][0].transcript; document.getElementById('userInput').value=t; };
-        this.state.recognition.onerror = (e) => { if(e.error!=='no-speech') { this.state.isListening=false; document.getElementById('btnVoice').classList.remove('listening'); } };
+        this.uiState.recognition = new webkitSpeechRecognition();
+        this.uiState.recognition.lang = 'pt-BR';
+        this.uiState.recognition.continuous = true; 
+        this.uiState.recognition.interimResults = true;
+        this.uiState.recognition.onstart = () => { this.uiState.isListening = true; document.getElementById('btnVoice').classList.add('listening'); this.showToast("🎙️ Voz Ativa..."); };
+        this.uiState.recognition.onend = () => { if (this.uiState.isListening) try { this.uiState.recognition.start(); } catch(e){} else document.getElementById('btnVoice').classList.remove('listening'); };
+        this.uiState.recognition.onresult = (e) => { let t=''; for(let i=e.resultIndex;i<e.results.length;++i) t+=e.results[i][0].transcript; document.getElementById('userInput').value=t; };
+        this.uiState.recognition.onerror = (e) => { if(e.error!=='no-speech') { this.uiState.isListening=false; document.getElementById('btnVoice').classList.remove('listening'); } };
     },
     toggleVoice() {
-        if (!this.state.recognition) return;
-        if (this.state.isListening) { this.state.isListening = false; this.state.recognition.stop(); }
-        else { window.speechSynthesis.cancel(); document.getElementById('userInput').value = ''; try { this.state.recognition.start(); } catch(e){} }
+        if (!this.uiState.recognition) return;
+        if (this.uiState.isListening) { this.uiState.isListening = false; this.uiState.recognition.stop(); }
+        else { window.speechSynthesis.cancel(); document.getElementById('userInput').value = ''; try { this.uiState.recognition.start(); } catch(e){} }
     },
 
     // --- UPLOAD ---
@@ -3322,7 +3369,7 @@ const App = {
             this.addFileMessage(file, previewHTML, size);
             const fractal = await KoblluxCore.process(content);
             this.addMessage('system', `Memória Fractal: ${fileName}\n${fractal.log}`);
-            this.state.messages.push({ role: 'user', content: `[ARQUIVO: ${fileName}]\n[TRINITY: ${JSON.stringify(fractal.trinity)}]\n${content}\n[SELO: ${fractal.seal}]` });
+            this.uiState.messages.push({ role: 'user', content: `[ARQUIVO: ${fileName}]\n[TRINITY: ${JSON.stringify(fractal.trinity)}]\n${content}\n[SELO: ${fractal.seal}]` });
             this.cancelUpload();
         };
         reader.readAsText(file);
@@ -3339,7 +3386,7 @@ const App = {
     async handleSend() {
         const input = document.getElementById('userInput');
         const txt = input.value.trim();
-        if (!txt || this.state.isProcessing) return;
+        if (!txt || this.uiState.isProcessing) return;
 
         if(txt.toLowerCase() === '/atlas') {
             input.value = ''; this.addMessage('user', txt);
@@ -3358,11 +3405,11 @@ const App = {
         const fractal = await KoblluxCore.process(txt);
         input.value = '';
         this.addMessage('user', txt);
-        this.state.isProcessing = true;
+        this.uiState.isProcessing = true;
         document.getElementById('field-toggle-handle').innerHTML = `<span class="footer-dot pulse"></span> ${getRandomText(FOOTER_TEXTS.loading)}`;
         
         const key = localStorage.getItem(STORAGE.API_KEY);
-        if (!key && !document.getElementById('inputModel').value.includes(':free')) { this.announce("Erro: API Key."); this.state.isProcessing = false; return; }
+        if (!key && !document.getElementById('inputModel').value.includes(':free')) { this.announce("Erro: API Key."); this.uiState.isProcessing = false; return; }
 
         try {
             document.body.classList.add('loading');
@@ -3373,7 +3420,7 @@ const App = {
                     model: document.getElementById('inputModel').value,
                     messages: [ 
                         { role: 'system', content: document.getElementById('systemRoleInput').value },
-                        ...this.state.messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+                        ...this.uiState.messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
                         { role: 'user', content: `${txt}\n\n[KOBLLUX]\nUNO:${fractal.trinity.UNO}\nSELO:${fractal.seal}` } 
                     ]
                 })
@@ -3385,13 +3432,13 @@ const App = {
             if (/^\s*(<!doctype html|<html)/i.test(aiContent)) {
                this.addHTMLViewer(aiContent);
                // Adiciona ao histórico sem renderizar de novo
-               this.state.messages.push({ role: 'assistant', content: aiContent });
+               this.uiState.messages.push({ role: 'assistant', content: aiContent });
             } else {
                this.addMessage('ai', aiContent);
             }
             
         } catch (e) { this.announce("Erro conexão."); } 
-        finally { document.body.classList.remove('loading'); this.state.isProcessing = false; this.toggleField(this.state.open, true); }
+        finally { document.body.classList.remove('loading'); this.uiState.isProcessing = false; this.toggleField(this.uiState.open, true); }
     },
 
     addMessage(role, text) {
@@ -3410,7 +3457,7 @@ const App = {
                   <button class="tool-btn" onclick="DownloadUtils.exportPdf(this)" title="PDF"><svg><use href="#icon-pdf"></use></svg></button>` : 
                   `<button class="tool-btn" onclick="Utils.edit(this)" title="Editar"><svg><use href="#icon-edit"></use></svg></button>`}
             </div>`;
-            this.state.messages.push({ role: role==='ai'?'assistant':'user', content: text });
+            this.uiState.messages.push({ role: role==='ai'?'assistant':'user', content: text });
         }
         d.innerHTML = html;
         if (role === 'ai') d.querySelectorAll('pre').forEach(pre => { 
@@ -3431,32 +3478,32 @@ const App = {
     },
 
     /* --- GERAL --- */
-    speakText(text) { if (!text || this.state.isListening) return; window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang='pt-BR'; u.rate=1.1; window.speechSynthesis.speak(u); },
+    speakText(text) { if (!text || this.uiState.isListening) return; window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang='pt-BR'; u.rate=1.1; window.speechSynthesis.speak(u); },
     announce(msg) { this.showToast(msg); },
     showToast(msg, err=false) { const t = document.getElementById('nv-toast'); t.textContent=msg; t.style.borderLeft=err?'4px solid #f44':'4px solid var(--primary)'; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); this.speakText(msg); },
     
     // CORREÇÃO VISUAL: CICLOS SOLARES
     setMode(m) { 
-        this.state.solarMode=m; 
+        this.uiState.solarMode=m; 
         document.body.classList.remove('mode-day', 'mode-sunset', 'mode-night');
         document.body.classList.add(`mode-${m}`); 
         this.updateUI(); 
         localStorage.setItem(STORAGE.SOLAR_MODE, m); 
     },
-    cycleSolar() { const n = this.state.solarMode==='day'?'sunset':(this.state.solarMode==='sunset'?'night':'day'); this.state.isAutoSolar=false; this.setMode(n); },
-    enableAutoSolar() { this.state.isAutoSolar=true; this.autoByTime(); this.announce("Auto Solar"); },
+    cycleSolar() { const n = this.uiState.solarMode==='day'?'sunset':(this.uiState.solarMode==='sunset'?'night':'day'); this.uiState.isAutoSolar=false; this.setMode(n); },
+    enableAutoSolar() { this.uiState.isAutoSolar=true; this.autoByTime(); this.announce("Auto Solar"); },
     autoByTime() { const h=new Date().getHours(); this.setMode((h>=6&&h<17)?'day':(h>=17&&h<19)?'sunset':'night'); },
     updateUI() { 
-        document.getElementById('statusSolarMode').textContent = `${this.state.solarMode.toUpperCase()} ${this.state.isAutoSolar ? '(AUTO)' : '(MAN)'}`; 
+        document.getElementById('statusSolarMode').textContent = `${this.uiState.solarMode.toUpperCase()} ${this.uiState.isAutoSolar ? '(AUTO)' : '(MAN)'}`; 
         document.getElementById('userNameDisplay').textContent = document.getElementById('inputUserId').value; 
     },
-    toggleField(f,s) { this.state.open = f!==undefined?f:!this.state.open; document.getElementById('chat-container').classList.toggle('collapsed', !this.state.open); document.body.classList.toggle('field-closed', !this.state.open); if(!s) this.speakText(getRandomText(FOOTER_TEXTS[this.state.open?'open':'closed']['ritual'])); },
+    toggleField(f,s) { this.uiState.open = f!==undefined?f:!this.uiState.open; document.getElementById('chat-container').classList.toggle('collapsed', !this.uiState.open); document.body.classList.toggle('field-closed', !this.uiState.open); if(!s) this.speakText(getRandomText(FOOTER_TEXTS[this.uiState.open?'open':'closed']['ritual'])); },
     
     // CORREÇÃO CRISTALIZAÇÃO (DECK)
     async crystallizeSession() {
-        if(this.state.messages.length === 0) { this.announce("Vazio não cristaliza."); return; }
-        const title = this.state.messages.find(m => m.role === 'user')?.content.substring(0, 30) || "Memória Sem Nome";
-        await this.indexedDB.saveDeckItem({ id: Date.now(), date: new Date().toLocaleString(), title: title + "...", data: [...this.state.messages] });
+        if(this.uiState.messages.length === 0) { this.announce("Vazio não cristaliza."); return; }
+        const title = this.uiState.messages.find(m => m.role === 'user')?.content.substring(0, 30) || "Memória Sem Nome";
+        await this.indexedDB.saveDeckItem({ id: Date.now(), date: new Date().toLocaleString(), title: title + "...", data: [...this.uiState.messages] });
         await this.renderDeck(); // Força render
         this.announce("Memória Salva.");
         if(!document.getElementById('drawerDeck').classList.contains('open')) toggleDrawer('drawerDeck');
@@ -3485,7 +3532,7 @@ const App = {
         const item = items.find(i => i.id === id);
         if(item) {
             document.getElementById('chat-container').innerHTML = ''; // Limpa tela
-            this.state.messages = []; // Limpa estado
+            this.uiState.messages = []; // Limpa estado
             item.data.forEach(msg => {
                 // Não adiciona no estado aqui, pois addMessage já faz isso se não for system
                 // Mas precisamos evitar duplicação no estado se usarmos addMessage
@@ -3494,7 +3541,7 @@ const App = {
             });
             // Ajuste fino para não duplicar estado (o addMessage já popula)
             // Apenas removemos as últimas duplicatas geradas pelo loop acima se necessário
-            // (Mas como limpamos this.state.messages antes, está OK).
+            // (Mas como limpamos this.uiState.messages antes, está OK).
             
             toggleDrawer('drawerDeck');
             this.announce("Memória restaurada.");
