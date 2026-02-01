@@ -2104,47 +2104,52 @@ const KODUX = {
    ═══════════════════════════════════════════════════════════════ */
 
 function initDIConstants() {
-    const di_userName = localStorage.getItem('di_userName') || '';
+    // 1. Pega o nome salvo. Se não tiver nada, usa "Viajante" como padrão inicial.
+    let di_userName = localStorage.getItem('di_userName');
+    
+    if (!di_userName || di_userName.trim() === '') {
+        di_userName = 'Viajante'; 
+        localStorage.setItem('di_userName', di_userName); // Salva o padrão para a próxima vez
+    }
+
+    // Carrega as outras configurações
     const di_infodoseName = localStorage.getItem('di_infodoseName') || '';
     const di_apiKey = localStorage.getItem('di_apiKey') || '';
     const di_modelName = localStorage.getItem('di_modelName') || 'nvidia/nemotron-3-nano-30b-a3b:free';
     const di_systemRole = localStorage.getItem('di_systemRole') || 'oi Dual';
     const di_solarMode = localStorage.getItem('di_solarMode') || '';
-    const di_assistantEnabled = localStorage.getItem('di_assistantEnabled') === '1';
-    const di_trainingActive = localStorage.getItem('di_trainingActive') === '1';
-    const di_trainingText = localStorage.getItem('di_trainingText') || '';
-    
-    // Atualizar elementos da UI
+
+    // --- AQUI ESTÁ A MÁGICA: Substitui em todos os lugares visuais ---
+
+    // 1. No Topo (Orb/Header)
     const userNameDisplay = document.getElementById('userNameDisplay');
-    if (userNameDisplay) {
-        userNameDisplay.textContent = di_userName;
-    }
-    
-    const modeIndicator = document.getElementById('modeIndicator');
-    if (modeIndicator) {
-        modeIndicator.textContent = `${di_infodoseName} · ${di_solarMode.toUpperCase()}`;
-    }
-    
-    // Preencher inputs com valores salvos
-    const apiKeyInput = document.getElementById('apiKeyInput');
-    if (apiKeyInput) apiKeyInput.value = di_apiKey;
-    
-    const systemRoleInput = document.getElementById('systemRoleInput');
-    if (systemRoleInput) systemRoleInput.value = di_systemRole;
-    
+    if (userNameDisplay) userNameDisplay.textContent = di_userName;
+
+    // 2. No Menu de Configurações (Input User ID)
     const inputUserId = document.getElementById('inputUserId');
     if (inputUserId) inputUserId.value = di_userName;
-    
+
+    // 3. No Card de Boas-vindas (Fusion Card)
+    const inputUser = document.getElementById('inputUser');
+    if (inputUser) inputUser.value = di_userName;
+
+    // 4. Na barra de informações superior
+    const displayUser = document.getElementById('displayUser');
+    if (displayUser) displayUser.textContent = 'User: ' + di_userName;
+
+    // Atualiza os outros campos de configuração também
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    if (apiKeyInput) apiKeyInput.value = di_apiKey;
+
     const inputModel = document.getElementById('inputModel');
     if (inputModel) inputModel.value = di_modelName;
-    
-    // Salvar no localStorage se não existir
-    if (!localStorage.getItem('di_userName')) localStorage.setItem('di_userName', di_userName);
-    if (!localStorage.getItem('di_infodoseName')) localStorage.setItem('di_infodoseName', di_infodoseName);
-    if (!localStorage.getItem('di_solarMode')) localStorage.setItem('di_solarMode', di_solarMode);
-    
-    console.log('[DI_CONSTANTS] Inicializado:', { di_userName, di_infodoseName, di_apiKey: di_apiKey ? '✓' : '✗' });
+
+    const systemRoleInput = document.getElementById('systemRoleInput');
+    if (systemRoleInput) systemRoleInput.value = di_systemRole;
+
+    console.log('DI Constants carregadas. Usuário:', di_userName);
 }
+
 
 // Chamar ao carregar a página
 document.addEventListener('DOMContentLoaded', initDIConstants);
